@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>New drop — Shaka</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pirata+One&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shaka.css">
+</head>
+<body>
+<main class="page">
+  <p class="crumbs"><a href="index.html">Inicio</a> / <span id="crumb"></span></p>
+  <h1 id="title"></h1>
+  <div class="toolbar">
+    <div class="chips" id="chips" role="group" aria-label="Filtrar por tipo de prenda"></div>
+    <label>Ordenar
+      <select id="sort">
+        <option value="">Destacados</option>
+        <option value="asc">Menor precio</option>
+        <option value="desc">Mayor precio</option>
+      </select>
+    </label>
+  </div>
+  <p id="count" aria-live="polite"></p>
+  <div class="grid" id="grid" style="margin-top:20px"></div>
+</main>
+<script src="shaka.js"></script>
+<script>
+const types=['Todo',...new Set(P.map(p=>p.t))];
+let cur=new URLSearchParams(location.search).get('t'), sort='';
+if(!types.includes(cur)) cur='Todo';
+$('chips').innerHTML=types.map(t=>`<button class="chip">${t}</button>`).join('');
+function draw(){
+  let l=P.filter(p=>cur==='Todo'||p.t===cur);
+  if(sort) l=[...l].sort((a,b)=>sort==='asc'?a.v-b.v:b.v-a.v);
+  const name=cur==='Todo'?'New drop':cur;
+  $('title').textContent=$('crumb').textContent=name; document.title=name+' — Shaka';
+  $('count').textContent=l.length+(l.length===1?' prenda':' prendas');
+  [...$('chips').children].forEach(b=>b.setAttribute('aria-pressed',b.textContent===cur));
+  $('grid').innerHTML=l.map(p=>card(p,'Ver prenda')).join('');
+  tiltCards();
+}
+$('chips').onclick=e=>{ const b=e.target.closest('button'); if(b){ cur=b.textContent; draw() } };
+$('sort').onchange=e=>{ sort=e.target.value; draw() };
+draw();
+</script>
+</body>
+</html>

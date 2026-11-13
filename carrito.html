@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Carrito — Shaka</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pirata+One&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shaka.css">
+</head>
+<body>
+<main class="page">
+  <h1>Carrito</h1>
+  <div class="cart" id="cart"></div>
+</main>
+<script src="shaka.js"></script>
+<script>
+function draw(){
+  const c=cart.get().map((x,i)=>({...x,i,p:P.find(p=>p.s===x.s)})).filter(x=>x.p);
+  if(!c.length){
+    $('cart').innerHTML='<div><p>Tu carrito está vacío. Sumá una prenda del drop para empezar.</p><p style="margin-top:20px"><a class="btn" href="categoria.html">Ver el drop</a></p></div>';
+    return;
+  }
+  const sub=c.reduce((a,x)=>a+x.p.v*x.q,0), left=FREE-sub;
+  $('cart').innerHTML=`<div>${c.map(x=>`
+    <div class="line">
+      <a href="${x.p.h}"><img src="${x.p.a}" alt=""></a>
+      <div>
+        <b>${esc(x.p.n)}</b>
+        <div>Talle ${esc(x.size)}, ${x.p.p} cada una</div>
+        <div class="qty">
+          <button data-i="${x.i}" data-d="-1" aria-label="Quitar una unidad de ${esc(x.p.n)}">&minus;</button>
+          <output>${x.q}</output>
+          <button data-i="${x.i}" data-d="1" aria-label="Sumar una unidad de ${esc(x.p.n)}">+</button>
+        </div>
+        <button class="rm" data-i="${x.i}" data-d="0" aria-label="Eliminar ${esc(x.p.n)}">Eliminar</button>
+      </div>
+      <b>${fmt(x.p.v*x.q)}</b>
+    </div>`).join('')}</div>
+  <aside class="sum">
+    <h2>Resumen</h2>
+    <p>${left>0?`Te faltan ${fmt(left)} para el envío gratis.`:'Ya tenés envío gratis.'}</p>
+    <progress max="${FREE}" value="${Math.min(sub,FREE)}" aria-label="Avance hacia el envío gratis"></progress>
+    <dl>
+      <dt>Subtotal</dt><dd>${fmt(sub)}</dd>
+      <dt>Envío</dt><dd>${left>0?'Se calcula al pagar':'Gratis'}</dd>
+      <dt>Pagando por transferencia</dt><dd>${fmt(Math.round(sub*.9))}</dd>
+    </dl>
+    <a class="btn wide" href="https://sh-aka.com.ar/">Iniciar compra</a>
+    <small>El pago se hace en el checkout seguro de Tiendanube.</small>
+  </aside>`;
+}
+$('cart').onclick=e=>{
+  const b=e.target.closest('button[data-i]'); if(!b) return;
+  const c=cart.get(), i=+b.dataset.i, d=+b.dataset.d;
+  if(!d||c[i].q+d<1) c.splice(i,1); else c[i].q+=d;
+  cart.set(c); draw();
+};
+draw();
+</script>
+</body>
+</html>

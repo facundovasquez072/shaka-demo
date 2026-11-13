@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Shaka Cmmnty — Smmr drop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pirata+One&display=swap" rel="stylesheet">
+<script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@4.0.0/dist/model-viewer.min.js"></script>
+<link rel="stylesheet" href="shaka.css">
+</head>
+<body>
+
+
+
+<main>
+<div class="hero">
+  <div>
+    <h1>Smmr drop</h1>
+    <p>Raglan tees, boardshorts vintage y knits para pasar el verano en la calle. Ya está en la tienda.</p>
+    <div class="cta">
+      <a class="btn" href="#drop">Ver el drop</a>
+      <a href="#hits">Big hits</a>
+    </div>
+  </div>
+  <div class="viewer">
+    <model-viewer id="mv" src="cap.glb" alt="Modelo 3D de la Black Cap de Shaka" camera-controls disable-zoom disable-pan auto-rotate rotation-per-second="26deg" interaction-prompt="none" shadow-intensity="1.2" shadow-softness=".9" exposure="1.15" camera-orbit="20deg 70deg auto" touch-action="pan-y" loading="eager"><div slot="poster" class="mv-wait">Cargando la gorra en 3D…</div></model-viewer>
+    <div class="viewer-cap">
+      <div><b>Black Cap</b>$65.000 · arrastrá para girarla</div>
+      <a class="btn small" href="producto.html?p=black-cap-1e8h0">Ver prenda</a>
+    </div>
+  </div>
+</div>
+
+<section id="cats">
+  <div class="head"><h2>Elegí qué buscás</h2></div>
+  <div class="grid" id="catGrid"></div>
+</section>
+
+<section id="drop">
+  <div class="head">
+    <h2>New drop</h2>
+    <p>Arrastrá para girar el drop. Tocá una prenda para comprarla.</p>
+  </div>
+  <div class="ring-stage" id="ringStage"><div class="ring" id="ring"></div></div>
+  <div class="ring-bar">
+    <button id="prev" aria-label="Prenda anterior">&#8592;</button>
+    <div class="ring-cap" id="cap" aria-live="polite"></div>
+    <button id="next" aria-label="Prenda siguiente">&#8594;</button>
+  </div>
+</section>
+
+<section class="creed">
+  <p>Big dreamz, bigger cmmnty</p>
+  <div class="stage" id="stage">
+    <div class="stack">
+      <img src="https://acdn-us.mitiendanube.com/stores/001/708/518/themes/rio/2-slide-1794436939073-8251023491-c04d37f2e6e06690205d472e0f71694b1794436940-1920-1920.webp" alt="Campaña Smmr drop" loading="lazy">
+      <img src="https://acdn-us.mitiendanube.com/stores/001/708/518/themes/rio/2-slide-1794436939074-3584304506-542adbf0592d090febe7fb96e34816681794436941-1920-1920.webp" alt="Smmr Ranglan Tee rosa frente a una pared rosa" loading="lazy">
+    </div>
+  </div>
+</section>
+
+<section id="hits">
+  <div class="head">
+    <h2>Big hits</h2>
+    <a class="btn" href="categoria.html">Ver todo</a>
+  </div>
+  <div class="grid" id="grid"></div>
+</section>
+
+<section class="perks">
+  <div><b>Envío gratis</b>superando los $180.000</div>
+  <div><b>10% off</b>pagando por transferencia</div>
+  <div><b>6 cuotas</b>sin interés</div>
+</section>
+</main>
+
+
+
+<script src="shaka.js"></script>
+<script>
+
+// --- Aro 3D ---
+const drop=P.slice(0,10), N=drop.length, STEP=360/N, ring=$('ring'), stage=$('ringStage');
+ring.innerHTML=drop.map(p=>`<a href="${p.h}" aria-label="${esc(p.n)}, ${p.p}"><img src="${p.a}" alt="" loading="lazy" draggable="false"></a>`).join('');
+const panels=[...ring.children];
+let R=0, rot=0, target=0, idx=-1, hold=false, drag=null, moved=false;
+function layout(){ R=Math.round(ring.offsetWidth/2/Math.tan(Math.PI/N))+24; panels.forEach((a,i)=>a.style.transform=`rotateY(${i*STEP}deg) translateZ(${R}px)`); }
+function frame(){
+  if(!hold&&!drag&&!still) target-=.06;
+  rot+=(target-rot)*.09;
+  ring.style.transform=`translateZ(${-R}px) rotateY(${rot}deg)`;
+  const i=((Math.round(-rot/STEP)%N)+N)%N;
+  if(i!==idx){ idx=i; const p=drop[i]; $('cap').innerHTML=`<b>${esc(p.n)}${p.pre?'<span class="tag">Pre-venta</span>':''}</b>${p.p} · <a href="${p.h}">Ver prenda</a>`; }
+  if(seen) requestAnimationFrame(frame);
+}
+const snap=d=>{ target=(Math.round(target/STEP)+d)*STEP; };
+$('prev').onclick=()=>snap(1); $('next').onclick=()=>snap(-1);
+stage.addEventListener('pointerdown',e=>{ drag={x:e.clientX,t:target}; moved=false; stage.classList.add('drag'); });
+addEventListener('pointermove',e=>{ if(!drag) return; const dx=e.clientX-drag.x; if(Math.abs(dx)>5) moved=true; target=drag.t+dx*.35; });
+addEventListener('pointerup',()=>{ if(drag){ drag=null; stage.classList.remove('drag'); snap(0); } });
+stage.addEventListener('click',e=>{ if(moved) e.preventDefault(); },true); // un arrastre no abre el producto
+const section=$('drop');
+section.addEventListener('pointerenter',()=>hold=true); section.addEventListener('pointerleave',()=>hold=false);
+panels.forEach((a,i)=>a.addEventListener('focus',()=>{ hold=true; target=-i*STEP+Math.round((target+i*STEP)/360)*360; }));
+// El aro solo anima mientras está en pantalla, para no competir con el modelo 3D del hero.
+let seen=false;
+new IntersectionObserver(([e])=>{ const was=seen; seen=e.isIntersecting; if(seen&&!was) frame(); }).observe(stage);
+addEventListener('resize',layout); layout(); frame();
+
+$('grid').innerHTML=P.slice(10).map(p=>card(p,'Ver prenda')).join('');
+$('catGrid').innerHTML=[['Tees',0],['Boardshorts',1],['Knitwear',2],['Hoodies',16]].map(([n,i])=>card({n,h:'categoria.html?t='+n,a:P[i].a,b:P[i].b,p:''},'Ver todo')).join('');
+if(still) $('mv').removeAttribute('auto-rotate');
+tiltCards(); if(canTilt) tilt($('stage'),$('stage').firstElementChild,22);
+</script>
+</body>
+</html>

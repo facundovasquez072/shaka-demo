@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Shaka</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pirata+One&display=swap" rel="stylesheet">
+<script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@4.0.0/dist/model-viewer.min.js"></script>
+<link rel="stylesheet" href="shaka.css">
+</head>
+<body>
+<main class="page">
+  <p class="crumbs"><a href="index.html">Inicio</a> / <a id="crumbCat"></a></p>
+  <div class="pdp">
+    <div class="gallery">
+      <div id="main"></div>
+      <div class="thumbs" id="thumbs"></div>
+    </div>
+    <form class="buybox" id="form">
+      <h1 id="name"></h1>
+      <p class="price" id="price"></p>
+      <p id="pay"></p>
+      <fieldset>
+        <legend>Talle</legend>
+        <div class="sizes" id="sizes"></div>
+      </fieldset>
+      <fieldset>
+        <legend>Cantidad</legend>
+        <div class="qty">
+          <button type="button" id="less" aria-label="Quitar una unidad">&minus;</button>
+          <output id="q">1</output>
+          <button type="button" id="more" aria-label="Sumar una unidad">+</button>
+        </div>
+      </fieldset>
+      <button class="btn wide">Agregar al carrito</button>
+      <p class="note" id="note" aria-live="polite"></p>
+      <ul class="facts" id="facts"></ul>
+    </form>
+  </div>
+  <section class="more" style="padding:0">
+    <div class="head"><h2>También del drop</h2></div>
+    <div class="grid" id="grid"></div>
+  </section>
+</main>
+<script src="shaka.js"></script>
+<script>
+const p=P.find(x=>x.s===new URLSearchParams(location.search).get('p'))||P[0];
+document.title=p.n+' — Shaka';
+$('name').textContent=p.n;
+$('price').textContent=p.p;
+$('pay').textContent=`${fmt(Math.round(p.v*.9))} por transferencia, o 6 cuotas sin interés de ${fmt(p.v/6)}`;
+$('crumbCat').textContent=p.t; $('crumbCat').href='categoria.html?t='+p.t;
+
+// Vistas de la galería: [miniatura, vista grande, etiqueta]. La gorra suma su modelo 3D.
+const views=[p.a,p.b].map((u,i)=>[`<img src="${u}" alt="">`,`<img src="${u}" alt="${esc(p.n)}, foto ${i+1}">`,'Ver foto '+(i+1)]);
+if(p.s.startsWith('black-cap')) views.unshift(['3D',`<model-viewer src="cap.glb" poster="${p.a}" alt="Modelo 3D de ${esc(p.n)}" camera-controls disable-zoom disable-pan auto-rotate interaction-prompt="none" shadow-intensity="1.2" exposure="1.15" touch-action="pan-y"></model-viewer>`,'Ver en 3D']);
+$('thumbs').innerHTML=views.map(v=>`<button type="button" aria-label="${v[2]}">${v[0]}</button>`).join('');
+function show(i){
+  $('main').style.transform=''; $('main').innerHTML=views[i][1];
+  [...$('thumbs').children].forEach((b,j)=>b.setAttribute('aria-pressed',j===i));
+  const mv=$('main').querySelector('model-viewer'), im=$('main').querySelector('img');
+  if(mv&&still) mv.removeAttribute('auto-rotate');
+  if(im&&canTilt) tilt(im,$('main'),10);
+}
+$('thumbs').onclick=e=>{ const b=e.target.closest('button'); if(b) show([...$('thumbs').children].indexOf(b)) };
+show(0);
+
+// shortcut: talles de muestra; en Tiendanube salen de las variantes reales del producto.
+const sizes=p.t==='Accesorios'?['Único']:['S','M','L','XL'];
+$('sizes').innerHTML=sizes.map((s,i)=>`<span><input type="radio" name="size" id="s${i}" value="${s}"${sizes.length===1?' checked':''}><label class="chip" for="s${i}">${s}</label></span>`).join('');
+let q=1; const setQ=n=>{ q=Math.max(1,n); $('q').textContent=q };
+$('less').onclick=()=>setQ(q-1); $('more').onclick=()=>setQ(q+1);
+$('form').onsubmit=e=>{
+  e.preventDefault();
+  const size=new FormData($('form')).get('size');
+  if(!size){ $('note').textContent='Elegí un talle para agregar la prenda.'; return }
+  cart.add(p.s,size,q);
+  $('note').innerHTML='Agregado al carrito. <a href="carrito.html">Ver carrito</a>';
+};
+$('facts').innerHTML=[p.pre&&'Pre-venta: se despacha más adelante que el resto del pedido.','Envío gratis superando los $180.000.','10% off pagando por transferencia.'].filter(Boolean).map(t=>`<li>${t}</li>`).join('');
+
+$('grid').innerHTML=P.filter(x=>x!==p).sort((a,b)=>(a.t!==p.t)-(b.t!==p.t)).slice(0,4).map(x=>card(x,'Ver prenda')).join('');
+tiltCards();
+</script>
+</body>
+</html>
